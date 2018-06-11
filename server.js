@@ -1,11 +1,13 @@
 // Muaz Khan      - www.MuazKhan.com
 // MIT License    - www.WebRTC-Experiment.com/licence
 // Documentation  - github.com/muaz-khan/RTCMultiConnection
+
 //jueves 16 de noiembre del 2017 sin cambios solo comentario
 //domingo 26 de noiembre del 2017 sin cambios solo comentario
 //lunes 4 de diciembre del 2017 sin cambios solo comentario
 //martes 6 de febrero del 2018 sin cambios solo comentario
 //jueves 22 de febrero del 2018 sin cambios solo comentario
+//lunes 12 de marzo del 2018 sin cambios solo comentario
 var port = process.env.PORT || 9001;
 var contenedorInbox40=[];
 var usuariosConectados=[];
@@ -318,8 +320,71 @@ function runServer() {
 				
 				}
 			); 
-			socket.on("conectar_usuario",function(sala){
-				socket.join(sala);
+			socket.on("conectar_usuario",function(room,nickname,misexo){
+				
+				socketemit();
+				
+				function existeuser(){
+					for(var esc=0;esc<usuariosConectados.length;esc++){
+							if((usuariosConectados[esc][1])===nickname && (usuariosConectados[esc][0]) === room){
+								return true;
+							}
+						}
+						return false;
+					}
+				    if(usuariosConectados.length>0){
+						if(existeuser()){
+							socketemit();	
+						}else{
+							usuariosConectados.push([room,nickname,misexo,new Date()]);
+							socketemit();
+						}
+					}
+					else{
+						usuariosConectados.push([room,nickname,misexo,new Date()]);
+						socketemit();
+					}
+				
+				function socketemit(){
+					var usuariosConectadosEstaSala=[];
+					var contenedorInbox40EstaSala=[];
+					
+					usuariosConectadosEstaSala.length=0;
+					contenedorInbox40EstaSala.length=0;
+					
+					for(var esc=0;esc<usuariosConectados.length;esc++){
+							if((usuariosConectados[esc][0]) === room){
+								usuariosConectadosEstaSala.push([usuariosConectados[esc][0],usuariosConectados[esc][1],usuariosConectados[esc][2],usuariosConectados[esc][3]]);
+							}
+						}
+						
+					if(contenedorInbox40.length>0){
+						for(var index=0;index<contenedorInbox40.length;index++){
+							if((contenedorInbox40[index][4]) === room){
+								contenedorInbox40EstaSala.push([contenedorInbox40[index][0],contenedorInbox40[index][1],contenedorInbox40[index][2],contenedorInbox40[index][3],contenedorInbox40[index][4]]);
+							}
+						}
+					}	
+					
+						
+					socket.join(room);
+
+					socket.broadcast.to(room).emit('actualizaLocal_chat_rp',contenedorInbox40EstaSala);
+					socket.emit('actualizaLocal_chat_rp',contenedorInbox40EstaSala);
+					
+					
+					socket.broadcast.to(room).emit('usuarios_chat_rp',usuariosConectadosEstaSala);
+					socket.emit('usuarios_chat_rp',usuariosConectadosEstaSala);	
+					
+					// socket.broadcast.to(room).emit('actualizaLocal_chat_rp',contenedorInbox40);
+					// socket.emit('actualizaLocal_chat_rp',contenedorInbox40);
+					
+					
+					// socket.broadcast.to(room).emit('usuarios_chat_rp',usuariosConectados);
+					// socket.emit('usuarios_chat_rp',usuariosConectados);					
+				}
+				
+				
 				}
 			);
 			socket.on("chat_mediacion",chat_conf);
@@ -341,7 +406,7 @@ function runServer() {
 				
 				function existeuser(){
 					for(var esc=0;esc<usuariosConectados.length;esc++){
-							if((usuariosConectados[esc][1])===nickname){
+							if((usuariosConectados[esc][1])===nickname && (usuariosConectados[esc][0]) === room){
 								return true;
 							}
 						}
@@ -361,14 +426,40 @@ function runServer() {
 					}
 				
 				function socketemit(){
+				var usuariosConectadosEstaSala=[];
+					var contenedorInbox40EstaSala=[];
+					
+					usuariosConectadosEstaSala.length=0;
+					contenedorInbox40EstaSala.length=0;
+					
+					for(var esc=0;esc<usuariosConectados.length;esc++){
+							if((usuariosConectados[esc][0]) === room){
+								usuariosConectadosEstaSala.push([usuariosConectados[esc][0],usuariosConectados[esc][1],usuariosConectados[esc][2],usuariosConectados[esc][3]]);
+							}
+						}
+						
+						
+					for(var index=0;index<contenedorInbox40.length;index++){
+							if((contenedorInbox40[index][4]) === room){
+								contenedorInbox40EstaSala.push([contenedorInbox40[index][0],contenedorInbox40[index][1],contenedorInbox40[index][2],contenedorInbox40[index][3],contenedorInbox40[index][4]]);
+							}
+						}
+						
 					socket.join(room);
+
+					socket.broadcast.to(room).emit('actualizaLocal_chat_rp',contenedorInbox40EstaSala);
+					socket.emit('actualizaLocal_chat_rp',contenedorInbox40EstaSala);
 					
-					socket.broadcast.to(room).emit('actualizaLocal_chat_rp',contenedorInbox40);
-					socket.emit('actualizaLocal_chat_rp',contenedorInbox40);
+					
+					socket.broadcast.to(room).emit('usuarios_chat_rp',usuariosConectadosEstaSala);
+					socket.emit('usuarios_chat_rp',usuariosConectadosEstaSala);	
+					
+					// socket.broadcast.to(room).emit('actualizaLocal_chat_rp',contenedorInbox40);
+					// socket.emit('actualizaLocal_chat_rp',contenedorInbox40);
 					
 					
-					socket.broadcast.to(room).emit('usuarios_chat_rp',usuariosConectados);
-					socket.emit('usuarios_chat_rp',usuariosConectados);					
+					// socket.broadcast.to(room).emit('usuarios_chat_rp',usuariosConectados);
+					// socket.emit('usuarios_chat_rp',usuariosConectados);				
 				}
 
 				
@@ -398,7 +489,7 @@ function runServer() {
 			function chat_public(room,mensaje,nickname,misexo,horamensaje){
 				horaini=new Date();
 				if((mensaje!=="")&&(mensaje!==null)&&(mensaje!==0)){
-					contenedorInbox40.push([misexo,nickname,mensaje,horamensaje]);
+					contenedorInbox40.push([misexo,nickname,mensaje,horamensaje,room]);
 					if(contenedorInbox40.length===20){
 						contenedorInbox40.splice(0,1);
 					}
