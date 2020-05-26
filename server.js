@@ -8,6 +8,7 @@
 //martes 6 de febrero del 2018 sin cambios solo comentario
 //jueves 22 de febrero del 2018 sin cambios solo comentario
 //lunes 12 de marzo del 2018 sin cambios solo comentario
+//cambio aplicado desde totalplay 26 de mayo de 2020
 var port = process.env.PORT || 9001;
 var contenedorInbox40=[];
 var usuariosConectados=[];
