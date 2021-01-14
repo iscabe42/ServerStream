@@ -36,14 +36,14 @@ module.exports = function(grunt) {
             dist: {
                 src: [
                     'dev/head.js',
-                    // 'dev/amd.js',
+                    'dev/amd.js',
 
                     'dev/SocketConnection.js', // You can replace it with: FirebaseConnection.js || PubNubConnection.js
                     'dev/MultiPeersHandler.js',
 
+                    // 'dev/adapter.js', ---- optional
+                    'node_modules/detectrtc/DetectRTC.js', // npm install detectrtc
                     'dev/globals.js',
-                    // 'dev/Plugin.EveryWhere.js',
-                    'dev/DetectRTC.js',
 
                     'dev/ios-hacks.js', // to support ios
                     'dev/RTCPeerConnection.js',
@@ -52,11 +52,8 @@ module.exports = function(grunt) {
                     'dev/OnIceCandidateHandler.js',
                     'dev/IceServersHandler.js',
 
-                    // 'dev/gumadapter.js',
                     'dev/getUserMedia.js',
                     'dev/StreamsHandler.js',
-
-                    'dev/Screen-Capturing.js',
 
                     'dev/TextSenderReceiver.js',
                     'dev/FileProgressBarHandler.js',
@@ -110,7 +107,7 @@ module.exports = function(grunt) {
             },
         },
         jsbeautifier: {
-            files: ['RTCMultiConnection.js', 'dev/*.js', 'Gruntfile.js', 'Signaling-Server.js', 'server.js'],
+            files: ['RTCMultiConnection.js', 'dev/*.js', 'Gruntfile.js', 'node_scripts/*.js', 'admin/js/admin-ui.js'],
             options: {
                 js: {
                     braceStyle: "collapse",
@@ -161,6 +158,15 @@ module.exports = function(grunt) {
                 pushTo: 'upstream',
                 gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d'
             }
+        },
+        watch: {
+            scripts: {
+                files: ['dev/*.js'],
+                tasks: ['concat', 'replace', 'jsbeautifier', 'uglify', 'copy', 'clean'],
+                options: {
+                    spawn: false,
+                },
+            }
         }
     });
 
@@ -169,4 +175,5 @@ module.exports = function(grunt) {
     // set default tasks to run when grunt is called without parameters
     // http://gruntjs.com/api/grunt.task
     grunt.registerTask('default', ['concat', 'replace', 'jsbeautifier', 'uglify', 'copy', 'clean']);
+    grunt.loadNpmTasks('grunt-contrib-watch');
 };
