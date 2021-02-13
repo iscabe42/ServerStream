@@ -2,13 +2,13 @@
   "ServiceId": "com.ibm.cloudoe.orion.client.deploy",
   "Params": {
     "Target": {
-      "Url": "https://api.ng.bluemix.net",
+      "Url": "https://api.us-south.cf.cloud.ibm.com",
       "Org": "wcamgirls2017@gmail.com",
       "Space": "dev"
     },
     "Name": "wcamgirls-stream",
     "Instrumentation": {}
-  },
-  "Path": "",
+  }
+  "Path": "manifest.yml",
   "Type": "Cloud Foundry"
 }
