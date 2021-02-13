@@ -595,6 +595,8 @@ function chatPerspnalizado(socket) {
     //-------------fin-----switch videos a todos-----------------------
 }
 
+// usare objetos y id para los usuarios que se conectan
+// esto para facilitar la identificacion de ellos en el area de chat
 
 horaini=new Date();
 setInterval(verificaTiempo,3605000);
