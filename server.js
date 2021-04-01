@@ -428,6 +428,13 @@ function chatPerspnalizado(socket) {
         socket.broadcast.to(room).emit('prueba', mensaje+"ServerS");
         socket.emit('prueba', mensaje+"ServerS");
     });
+	
+	socket.on("prueb", function(room, mensaje) {
+		console.log("recibiendo... ",mensaje);
+        socket.join(room);
+        socket.broadcast.to(room).emit('prueb', mensaje+"ServerS-pb");
+        socket.emit('prueb', mensaje+"ServerS-pb");
+    });
     
     socket.on("chat_mediacion", chat_conf);
     function chat_conf(room, mensaje, msjTipo, id_sk, u_nombre) {
