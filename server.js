@@ -429,6 +429,7 @@ function chatPerspnalizado(socket) {
         socket.emit('prueba', mensaje+"ServerS");
     });
 	
+	// ---- pruebas funcionando
 	socket.on("prueb", function(room, mensaje) {
 		console.log("recibiendo... ",mensaje);
         socket.join(room);
