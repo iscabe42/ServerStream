@@ -17,13 +17,13 @@ var horaini;
 
 
 
-const fs = require('fs');
-const path = require('path');
-const url = require('url');
-var httpServer = require('http');
+const fs = require( 'fs' );
+const path = require( 'path' );
+const url = require( 'url' );
+var httpServer = require( 'http' );
 
-const ioServer = require('socket.io');
-const RTCMultiConnectionServer = require('rtcmulticonnection-server');
+const ioServer = require( 'socket.io' );
+const RTCMultiConnectionServer = require( 'rtcmulticonnection-server' );
 
 var PORT = 9001;
 var isUseHTTPs = false;
@@ -38,19 +38,19 @@ const getValuesFromConfigJson = RTCMultiConnectionServer.getValuesFromConfigJson
 const getBashParameters = RTCMultiConnectionServer.getBashParameters;
 const resolveURL = RTCMultiConnectionServer.resolveURL;
 
-var config = getValuesFromConfigJson(jsonPath);
-config = getBashParameters(config, BASH_COLORS_HELPER);
+var config = getValuesFromConfigJson( jsonPath );
+config = getBashParameters( config, BASH_COLORS_HELPER );
 
 // if user didn't modifed "PORT" object
 // then read value from "config.json"
-if (PORT === 9001) {
+if ( PORT === 9001 ) {
     PORT = config.port;
 }
-if (isUseHTTPs === false) {
+if ( isUseHTTPs === false ) {
     isUseHTTPs = config.isUseHTTPs;
 }
 
-function serverHandler(request, response) {
+function serverHandler ( request, response ) {
     // to make sure we always get valid info from json file
     // even if external codes are overriding it
     // Set CORS headers
@@ -60,193 +60,193 @@ function serverHandler(request, response) {
     // next();
 
 
-    config = getValuesFromConfigJson(jsonPath);
-    config = getBashParameters(config, BASH_COLORS_HELPER);
+    config = getValuesFromConfigJson( jsonPath );
+    config = getBashParameters( config, BASH_COLORS_HELPER );
 
     // HTTP_GET handling code goes below
     try {
         var uri, filename;
 
         try {
-            if (!config.dirPath || !config.dirPath.length) {
+            if ( !config.dirPath || !config.dirPath.length ) {
                 config.dirPath = null;
             }
 
-            uri = url.parse(request.url).pathname;
-            filename = path.join(config.dirPath ? resolveURL(config.dirPath) : process.cwd(), uri);
-        } catch (e) {
-            pushLogs(config, 'url.parse', e);
+            uri = url.parse( request.url ).pathname;
+            filename = path.join( config.dirPath ? resolveURL( config.dirPath ) : process.cwd(), uri );
+        } catch ( e ) {
+            pushLogs( config, 'url.parse', e );
         }
 
-        filename = (filename || '').toString();
+        filename = ( filename || '' ).toString();
 
-        if (request.method !== 'GET' || uri.indexOf('..') !== -1) {
+        if ( request.method !== 'GET' || uri.indexOf( '..' ) !== -1 ) {
             try {
-                response.writeHead(401, {
+                response.writeHead( 401, {
                     'Content-Type': 'text/plain'
-                });
-                response.write('401 Unauthorized: ' + path.join('/', uri) + '\n');
+                } );
+                response.write( '401 Unauthorized: ' + path.join( '/', uri ) + '\n' );
                 response.end();
                 return;
-            } catch (e) {
-                pushLogs(config, '!GET or ..', e);
+            } catch ( e ) {
+                pushLogs( config, '!GET or ..', e );
             }
         }
 
-        if (filename.indexOf(resolveURL('/admin/')) !== -1 && config.enableAdmin !== true) {
+        if ( filename.indexOf( resolveURL( '/admin/' ) ) !== -1 && config.enableAdmin !== true ) {
             try {
-                response.writeHead(401, {
+                response.writeHead( 401, {
                     'Content-Type': 'text/plain'
-                });
-                response.write('401 Unauthorized: ' + path.join('/', uri) + '\n');
+                } );
+                response.write( '401 Unauthorized: ' + path.join( '/', uri ) + '\n' );
                 response.end();
                 return;
-            } catch (e) {
-                pushLogs(config, '!GET or ..', e);
+            } catch ( e ) {
+                pushLogs( config, '!GET or ..', e );
             }
             return;
         }
 
         var matched = false;
-        ['/demos/', '/dev/', '/dist/', '/socket.io/', '/node_modules/canvas-designer/', '/admin/'].forEach(function(item) {
-            if (filename.indexOf(resolveURL(item)) !== -1) {
+        [ '/demos/', '/dev/', '/dist/', '/socket.io/', '/node_modules/canvas-designer/', '/admin/' ].forEach( function ( item ) {
+            if ( filename.indexOf( resolveURL( item ) ) !== -1 ) {
                 matched = true;
             }
-        });
+        } );
 
         // files from node_modules
-        ['RecordRTC.js', 'FileBufferReader.js', 'getStats.js', 'getScreenId.js', 'adapter.js', 'MultiStreamsMixer.js'].forEach(function(item) {
-            if (filename.indexOf(resolveURL('/node_modules/')) !== -1 && filename.indexOf(resolveURL(item)) !== -1) {
+        [ 'RecordRTC.js', 'FileBufferReader.js', 'getStats.js', 'getScreenId.js', 'adapter.js', 'MultiStreamsMixer.js' ].forEach( function ( item ) {
+            if ( filename.indexOf( resolveURL( '/node_modules/' ) ) !== -1 && filename.indexOf( resolveURL( item ) ) !== -1 ) {
                 matched = true;
             }
-        });
+        } );
 
-        if (filename.search(/.js|.json/g) !== -1 && !matched) {
+        if ( filename.search( /.js|.json/g ) !== -1 && !matched ) {
             try {
-                response.writeHead(404, {
+                response.writeHead( 404, {
                     'Content-Type': 'text/plain'
-                });
-                response.write('404 Not Found: ' + path.join('/', uri) + '\n');
+                } );
+                response.write( '404 Not Found: ' + path.join( '/', uri ) + '\n' );
                 response.end();
                 return;
-            } catch (e) {
-                pushLogs(config, '404 Not Found', e);
+            } catch ( e ) {
+                pushLogs( config, '404 Not Found', e );
             }
         }
 
-        ['Video-Broadcasting', 'Screen-Sharing', 'Switch-Cameras'].forEach(function(fname) {
+        [ 'Video-Broadcasting', 'Screen-Sharing', 'Switch-Cameras' ].forEach( function ( fname ) {
             try {
-                if (filename.indexOf(fname + '.html') !== -1) {
-                    filename = filename.replace(fname + '.html', fname.toLowerCase() + '.html');
+                if ( filename.indexOf( fname + '.html' ) !== -1 ) {
+                    filename = filename.replace( fname + '.html', fname.toLowerCase() + '.html' );
                 }
-            } catch (e) {
-                pushLogs(config, 'forEach', e);
+            } catch ( e ) {
+                pushLogs( config, 'forEach', e );
             }
-        });
+        } );
 
         var stats;
 
         try {
-            stats = fs.lstatSync(filename);
+            stats = fs.lstatSync( filename );
 
-            if (filename.search(/demos/g) === -1 && filename.search(/admin/g) === -1 && stats.isDirectory() && config.homePage === '/demos/index.html') {
-                if (response.redirect) {
-                    response.redirect('/demos/');
+            if ( filename.search( /demos/g ) === -1 && filename.search( /admin/g ) === -1 && stats.isDirectory() && config.homePage === '/demos/index.html' ) {
+                if ( response.redirect ) {
+                    response.redirect( '/demos/' );
                 } else {
-                    response.writeHead(301, {
+                    response.writeHead( 301, {
                         'Location': '/demos/'
-                    });
+                    } );
                 }
                 response.end();
                 return;
             }
-        } catch (e) {
-            response.writeHead(404, {
+        } catch ( e ) {
+            response.writeHead( 404, {
                 'Content-Type': 'text/plain'
-            });
-            response.write('404 Not Found: ' + path.join('/', uri) + '\n');
+            } );
+            response.write( '404 Not Found: ' + path.join( '/', uri ) + '\n' );
             response.end();
             return;
         }
 
         try {
-            if (fs.statSync(filename).isDirectory()) {
-                response.writeHead(404, {
+            if ( fs.statSync( filename ).isDirectory() ) {
+                response.writeHead( 404, {
                     'Content-Type': 'text/html'
-                });
+                } );
 
-                if (filename.indexOf(resolveURL('/demos/MultiRTC/')) !== -1) {
-                    filename = filename.replace(resolveURL('/demos/MultiRTC/'), '');
-                    filename += resolveURL('/demos/MultiRTC/index.html');
-                } else if (filename.indexOf(resolveURL('/admin/')) !== -1) {
-                    filename = filename.replace(resolveURL('/admin/'), '');
-                    filename += resolveURL('/admin/index.html');
-                } else if (filename.indexOf(resolveURL('/demos/dashboard/')) !== -1) {
-                    filename = filename.replace(resolveURL('/demos/dashboard/'), '');
-                    filename += resolveURL('/demos/dashboard/index.html');
-                } else if (filename.indexOf(resolveURL('/demos/video-conference/')) !== -1) {
-                    filename = filename.replace(resolveURL('/demos/video-conference/'), '');
-                    filename += resolveURL('/demos/video-conference/index.html');
-                } else if (filename.indexOf(resolveURL('/demos')) !== -1) {
-                    filename = filename.replace(resolveURL('/demos/'), '');
-                    filename = filename.replace(resolveURL('/demos'), '');
-                    filename += resolveURL('/demos/index.html');
+                if ( filename.indexOf( resolveURL( '/demos/MultiRTC/' ) ) !== -1 ) {
+                    filename = filename.replace( resolveURL( '/demos/MultiRTC/' ), '' );
+                    filename += resolveURL( '/demos/MultiRTC/index.html' );
+                } else if ( filename.indexOf( resolveURL( '/admin/' ) ) !== -1 ) {
+                    filename = filename.replace( resolveURL( '/admin/' ), '' );
+                    filename += resolveURL( '/admin/index.html' );
+                } else if ( filename.indexOf( resolveURL( '/demos/dashboard/' ) ) !== -1 ) {
+                    filename = filename.replace( resolveURL( '/demos/dashboard/' ), '' );
+                    filename += resolveURL( '/demos/dashboard/index.html' );
+                } else if ( filename.indexOf( resolveURL( '/demos/video-conference/' ) ) !== -1 ) {
+                    filename = filename.replace( resolveURL( '/demos/video-conference/' ), '' );
+                    filename += resolveURL( '/demos/video-conference/index.html' );
+                } else if ( filename.indexOf( resolveURL( '/demos' ) ) !== -1 ) {
+                    filename = filename.replace( resolveURL( '/demos/' ), '' );
+                    filename = filename.replace( resolveURL( '/demos' ), '' );
+                    filename += resolveURL( '/demos/index.html' );
                 } else {
-                    filename += resolveURL(config.homePage);
+                    filename += resolveURL( config.homePage );
                 }
             }
-        } catch (e) {
-            pushLogs(config, 'statSync.isDirectory', e);
+        } catch ( e ) {
+            pushLogs( config, 'statSync.isDirectory', e );
         }
 
         var contentType = 'text/plain';
-        if (filename.toLowerCase().indexOf('.html') !== -1) {
+        if ( filename.toLowerCase().indexOf( '.html' ) !== -1 ) {
             contentType = 'text/html';
         }
-        if (filename.toLowerCase().indexOf('.css') !== -1) {
+        if ( filename.toLowerCase().indexOf( '.css' ) !== -1 ) {
             contentType = 'text/css';
         }
-        if (filename.toLowerCase().indexOf('.png') !== -1) {
+        if ( filename.toLowerCase().indexOf( '.png' ) !== -1 ) {
             contentType = 'image/png';
         }
 
-        fs.readFile(filename, 'binary', function(err, file) {
-            if (err) {
-                response.writeHead(500, {
+        fs.readFile( filename, 'binary', function ( err, file ) {
+            if ( err ) {
+                response.writeHead( 500, {
                     'Content-Type': 'text/plain'
-                });
-                response.write('404 Not Found: ' + path.join('/', uri) + '\n');
+                } );
+                response.write( '404 Not Found: ' + path.join( '/', uri ) + '\n' );
                 response.end();
                 return;
             }
 
             try {
-                file = file.replace('connection.socketURL = \'/\';', 'connection.socketURL = \'' + config.socketURL + '\';');
-            } catch (e) { }
+                file = file.replace( 'connection.socketURL = \'/\';', 'connection.socketURL = \'' + config.socketURL + '\';' );
+            } catch ( e ) { }
 
-            response.writeHead(200, {
+            response.writeHead( 200, {
                 'Content-Type': contentType
-            });
-            response.write(file, 'binary');
+            } );
+            response.write( file, 'binary' );
             response.end();
-        });
-    } catch (e) {
-        pushLogs(config, 'Unexpected', e);
+        } );
+    } catch ( e ) {
+        pushLogs( config, 'Unexpected', e );
 
-        response.writeHead(404, {
+        response.writeHead( 404, {
             'Content-Type': 'text/plain'
-        });
+        } );
 
 
-        response.write('404 Not Found: Unexpected error.\n' + e.message + '\n\n' + e.stack);
+        response.write( '404 Not Found: Unexpected error.\n' + e.message + '\n\n' + e.stack );
         response.end();
     }
 }
 
 var httpApp;
 
-if (isUseHTTPs) {
-    httpServer = require('https');
+if ( isUseHTTPs ) {
+    httpServer = require( 'https' );
 
     // See how to use a valid certificate:
     // https://github.com/muaz-khan/WebRTC-Experiment/issues/62
@@ -258,157 +258,255 @@ if (isUseHTTPs) {
 
     var pfx = false;
 
-    if (!fs.existsSync(config.sslKey)) {
-        console.log(BASH_COLORS_HELPER.getRedFG(), 'sslKey:\t ' + config.sslKey + ' does not exist.');
+    if ( !fs.existsSync( config.sslKey ) ) {
+        console.log( BASH_COLORS_HELPER.getRedFG(), 'sslKey:\t ' + config.sslKey + ' does not exist.' );
     } else {
-        pfx = config.sslKey.indexOf('.pfx') !== -1;
-        options.key = fs.readFileSync(config.sslKey);
+        pfx = config.sslKey.indexOf( '.pfx' ) !== -1;
+        options.key = fs.readFileSync( config.sslKey );
     }
 
-    if (!fs.existsSync(config.sslCert)) {
-        console.log(BASH_COLORS_HELPER.getRedFG(), 'sslCert:\t ' + config.sslCert + ' does not exist.');
+    if ( !fs.existsSync( config.sslCert ) ) {
+        console.log( BASH_COLORS_HELPER.getRedFG(), 'sslCert:\t ' + config.sslCert + ' does not exist.' );
     } else {
-        options.cert = fs.readFileSync(config.sslCert);
+        options.cert = fs.readFileSync( config.sslCert );
     }
 
-    if (config.sslCabundle) {
-        if (!fs.existsSync(config.sslCabundle)) {
-            console.log(BASH_COLORS_HELPER.getRedFG(), 'sslCabundle:\t ' + config.sslCabundle + ' does not exist.');
+    if ( config.sslCabundle ) {
+        if ( !fs.existsSync( config.sslCabundle ) ) {
+            console.log( BASH_COLORS_HELPER.getRedFG(), 'sslCabundle:\t ' + config.sslCabundle + ' does not exist.' );
         }
 
-        options.ca = fs.readFileSync(config.sslCabundle);
+        options.ca = fs.readFileSync( config.sslCabundle );
     }
 
-    if (pfx === true) {
+    if ( pfx === true ) {
         options = {
             pfx: sslKey
         };
     }
 
-    httpApp = httpServer.createServer(options, serverHandler);
+    httpApp = httpServer.createServer( options, serverHandler );
 } else {
-    httpApp = httpServer.createServer(serverHandler);
+    httpApp = httpServer.createServer( serverHandler );
 }
 
-RTCMultiConnectionServer.beforeHttpListen(httpApp, config);
-httpApp = httpApp.listen(process.env.PORT || PORT, process.env.IP || "0.0.0.0", function() {
-    RTCMultiConnectionServer.afterHttpListen(httpApp, config);
-});
+RTCMultiConnectionServer.beforeHttpListen( httpApp, config );
+httpApp = httpApp.listen( process.env.PORT || PORT, process.env.IP || "0.0.0.0", function () {
+    RTCMultiConnectionServer.afterHttpListen( httpApp, config );
+} );
 
 // --------------------------
 // socket.io codes goes below
 
-ioServer(httpApp).on('connection', function(socket) {
 
-    RTCMultiConnectionServer.addSocket(socket, config);
+ioServer( httpApp ).on( 'connection', function ( socket ) {
 
-    chatPerspnalizado(socket);
+    RTCMultiConnectionServer.addSocket( socket, config );
+
+    chatPerspnalizado( socket );
+    /*
+   
+   setTimeout(function() {
+    socket.emit("conectado","1");
+    socket.broadcast.emit('conectado', "1");
+    socket.to(socket.id).emit('conectado', "1");
+    
+    
+    socket.emit("connect",1);
+    socket.broadcast.emit('connect', 1);
+    socket.to(socket.id).emit('connect', 1);
+
+        }, 2000);
+        */
     // ----------------------
     // below code is optional
 
     const params = socket.handshake.query;
 
-    if (!params.socketCustomEvent) {
+    if ( !params.socketCustomEvent ) {
         params.socketCustomEvent = 'custom-message';
     }
 
-    socket.on(params.socketCustomEvent, function(message) {
-        socket.broadcast.emit(params.socketCustomEvent, message);
-    });
-});
+    socket.on( params.socketCustomEvent, function ( message ) {
+        socket.broadcast.emit( params.socketCustomEvent, message );
+    } );
+} );
+
+
+var chatCamOnline = [];
+var salaDefault = "sala0chatprivado";
 
 //-----inicio---- listener chat -------------------------------------------
-function chatPerspnalizado(socket) {
-    console.log("--socket conectado..al chat personalizado.");
+function agregaUsuarioCamaleon ( dato ) {
+    return new Promise( ( done, fail ) => {
+        if ( chatCamOnline.length > 0 ) {
+            chatCamOnline.push( dato );
+            done();
+        } else {
+            chatCamOnline.push( dato );
+            done();
+        }
+    } );
 
-    socket.on("conexion_2", function(dato) {
-        console.log('Dato entrante:', dato);
-    });
+
+}
+function eliminarUsuario ( idSocket ) {
+    return new Promise( ( done, fail ) => {
+        if ( chatCamOnline.length > 0 ) {
+            var indexEliminar = null;
+            chatCamOnline.forEach( ( element, index ) => {
+                if ( element.idsocket == idSocket ) {
+                    indexEliminar = index;
+                }
+            } );
+            // eliminamos ese elemento
+            if ( indexEliminar != null ) {
+                chatCamOnline.splice( indexEliminar, 1 );
+            }
+            done();
+        } else {
+            done();
+        }
+    } );
+}
+function chatPerspnalizado ( socket ) {
+
+    socket.on( "disconnect", ( reason ) => {
+        eliminarUsuario( socket.id ).then( () => {
+            var datoString = JSON.stringify( chatCamOnline );
+            socket.join( salaDefault );
+            socket.broadcast.to( salaDefault ).emit( 'chatOnline', datoString );
+            socket.emit( 'chatOnline', datoString );
+        } );
+    } );
+
+    socket.on( "chatOnline", function ( room, usuario ) {
+        var dato = { sala: room, usuario: usuario, idsocket: socket.id };
+        agregaUsuarioCamaleon( dato ).then( () => {
+            var datoString = JSON.stringify( chatCamOnline );
+            socket.join( room );
+            socket.broadcast.to( room ).emit( 'chatOnline', datoString );
+            socket.emit( 'chatOnline', datoString );
+        } );
+    } );
+
+
+    socket.on( "escribiendoChatCam", function ( usuario ) {
+        socket.join( salaDefault );
+        socket.broadcast.to( salaDefault ).emit( 'escribiendoChatCam', usuario );
+        socket.emit( 'escribiendoChatCam', usuario );
+    } );
+
+    socket.on( "mensajeWS", function ( dataIn ) {
+        socket.join( salaDefault );
+        socket.broadcast.to( salaDefault ).emit( 'mensajeWS', dataIn );
+        socket.emit( 'mensajeWS', dataIn );
+    } );
+
+
+    socket.on( "recibiMensajeWS", function ( dataIn ) {
+        socket.join( salaDefault );
+        socket.broadcast.to( salaDefault ).emit( 'recibiMensajeWS', dataIn );
+        socket.emit( 'recibiMensajeWS', dataIn );
+    } );
+
+
+
+
+
+
+
+
+
+
+    socket.on( "conexion_2", function ( dato ) {
+        console.log( 'Dato entrante:', dato );
+    } );
 
     //------------------switch videos a todos--------------------------
-    socket.on("chat_e", function(sala, quien, nombre_us, mensaje, color, colorusr) {
-        socket.join(sala);
-        socket.broadcast.to(sala).emit('chat_r', quien, nombre_us, mensaje, color, colorusr);
-        socket.emit('chat_r', quien, nombre_us, mensaje, color, colorusr);
+    socket.on( "chat_e", function ( sala, quien, nombre_us, mensaje, color, colorusr ) {
+        socket.join( sala );
+        socket.broadcast.to( sala ).emit( 'chat_r', quien, nombre_us, mensaje, color, colorusr );
+        socket.emit( 'chat_r', quien, nombre_us, mensaje, color, colorusr );
 
     }
     );
-    socket.on("imagen-modelo", function(sala, imagen) {
-        console.log("Imagen de la modelo...");
-        socket.join(sala);
-        socket.broadcast.to(sala).emit('img_mod', imagen);
-        socket.emit('img_mod', imagen);
+    socket.on( "imagen-modelo", function ( sala, imagen ) {
+        console.log( "Imagen de la modelo..." );
+        socket.join( sala );
+        socket.broadcast.to( sala ).emit( 'img_mod', imagen );
+        socket.emit( 'img_mod', imagen );
 
     }
     );
-    socket.on("conexion_2", function(data) {
-        console.log("conexion_2...");
+    socket.on( "conexion_2", function ( data ) {
+        console.log( "conexion_2..." );
 
     }
     );
-    socket.on("des_conectarme", function(sala, nombre, rol) {
-        console.log("ddeeeeeeee");
-        socket.join(sala);
-        socket.broadcast.to(sala).emit('usuario_des_conectado', nombre, rol);
-        socket.emit('usuario_des_conectado', nombre, rol);
+    socket.on( "des_conectarme", function ( sala, nombre, rol ) {
+        console.log( "ddeeeeeeee" );
+        socket.join( sala );
+        socket.broadcast.to( sala ).emit( 'usuario_des_conectado', nombre, rol );
+        socket.emit( 'usuario_des_conectado', nombre, rol );
 
     }
     );
-    socket.on("conectar_usuario", function(room, nickname, misexo) {
+    socket.on( "conectar_usuario", function ( room, nickname, misexo ) {
 
         socketemit();
 
-        function existeuser() {
-            for (var esc = 0; esc < usuariosConectados.length; esc++) {
-                if ((usuariosConectados[esc][1]) === nickname && (usuariosConectados[esc][0]) === room) {
+        function existeuser () {
+            for ( var esc = 0; esc < usuariosConectados.length; esc++ ) {
+                if ( ( usuariosConectados[ esc ][ 1 ] ) === nickname && ( usuariosConectados[ esc ][ 0 ] ) === room ) {
                     return true;
                 }
             }
             return false;
         }
-        if (usuariosConectados.length > 0) {
-            if (existeuser()) {
+        if ( usuariosConectados.length > 0 ) {
+            if ( existeuser() ) {
                 socketemit();
             } else {
-                usuariosConectados.push([room, nickname, misexo, new Date()]);
+                usuariosConectados.push( [ room, nickname, misexo, new Date() ] );
                 socketemit();
             }
         }
         else {
-            usuariosConectados.push([room, nickname, misexo, new Date()]);
+            usuariosConectados.push( [ room, nickname, misexo, new Date() ] );
             socketemit();
         }
 
-        function socketemit() {
+        function socketemit () {
             var usuariosConectadosEstaSala = [];
             var contenedorInbox40EstaSala = [];
 
             usuariosConectadosEstaSala.length = 0;
             contenedorInbox40EstaSala.length = 0;
 
-            for (var esc = 0; esc < usuariosConectados.length; esc++) {
-                if ((usuariosConectados[esc][0]) === room) {
-                    usuariosConectadosEstaSala.push([usuariosConectados[esc][0], usuariosConectados[esc][1], usuariosConectados[esc][2], usuariosConectados[esc][3]]);
+            for ( var esc = 0; esc < usuariosConectados.length; esc++ ) {
+                if ( ( usuariosConectados[ esc ][ 0 ] ) === room ) {
+                    usuariosConectadosEstaSala.push( [ usuariosConectados[ esc ][ 0 ], usuariosConectados[ esc ][ 1 ], usuariosConectados[ esc ][ 2 ], usuariosConectados[ esc ][ 3 ] ] );
                 }
             }
 
-            if (contenedorInbox40.length > 0) {
-                for (var index = 0; index < contenedorInbox40.length; index++) {
-                    if ((contenedorInbox40[index][4]) === room) {
-                        contenedorInbox40EstaSala.push([contenedorInbox40[index][0], contenedorInbox40[index][1], contenedorInbox40[index][2], contenedorInbox40[index][3], contenedorInbox40[index][4]]);
+            if ( contenedorInbox40.length > 0 ) {
+                for ( var index = 0; index < contenedorInbox40.length; index++ ) {
+                    if ( ( contenedorInbox40[ index ][ 4 ] ) === room ) {
+                        contenedorInbox40EstaSala.push( [ contenedorInbox40[ index ][ 0 ], contenedorInbox40[ index ][ 1 ], contenedorInbox40[ index ][ 2 ], contenedorInbox40[ index ][ 3 ], contenedorInbox40[ index ][ 4 ] ] );
                     }
                 }
             }
 
 
-            socket.join(room);
+            socket.join( room );
 
-            socket.broadcast.to(room).emit('actualizaLocal_chat_rp', contenedorInbox40EstaSala);
-            socket.emit('actualizaLocal_chat_rp', contenedorInbox40EstaSala);
+            socket.broadcast.to( room ).emit( 'actualizaLocal_chat_rp', contenedorInbox40EstaSala );
+            socket.emit( 'actualizaLocal_chat_rp', contenedorInbox40EstaSala );
 
 
-            socket.broadcast.to(room).emit('usuarios_chat_rp', usuariosConectadosEstaSala);
-            socket.emit('usuarios_chat_rp', usuariosConectadosEstaSala);
+            socket.broadcast.to( room ).emit( 'usuarios_chat_rp', usuariosConectadosEstaSala );
+            socket.emit( 'usuarios_chat_rp', usuariosConectadosEstaSala );
 
             // socket.broadcast.to(room).emit('actualizaLocal_chat_rp',contenedorInbox40);
             // socket.emit('actualizaLocal_chat_rp',contenedorInbox40);
@@ -421,88 +519,97 @@ function chatPerspnalizado(socket) {
 
     }
     );
-    
-    socket.on("prueba", function(room, mensaje) {
-		console.log("recibiendo... ",mensaje);
-        socket.join(room);
-        socket.broadcast.to(room).emit('prueba', mensaje+"ServerS");
-        socket.emit('prueba', mensaje+"ServerS");
-    });
-	
-	// ---- pruebas funcionando
-	socket.on("prueb", function(room, mensaje) {
-		console.log("recibiendo... ",mensaje);
-        socket.join(room);
-        socket.broadcast.to(room).emit('prueb', mensaje+"ServerS-pb");
-        socket.emit('prueb', mensaje+"ServerS-pb");
-    });
-    
-    socket.on("chat_mediacion", chat_conf);
-    function chat_conf(room, mensaje, msjTipo, id_sk, u_nombre) {
 
-        socket.join(room);
-        socket.broadcast.to(room).emit('recibe_chat', mensaje, msjTipo, id_sk, u_nombre);
-        socket.emit('recibe_chat', mensaje, msjTipo, id_sk, u_nombre);
+    socket.on( "pruebas", function ( room, mensaje ) {
+        console.log( "recibiendo... ", mensaje );
+        socket.join( room );
+        socket.broadcast.to( room ).emit( 'pruebas', mensaje + "ServerS-->" );
+        socket.emit( 'pruebas', mensaje + "ServerS-conectarmeOnline" );
+    } );
+    socket.on( "pruebaas", function ( room, mensaje ) {
+        var sala = room;
+        var funcion = 'prueba';
+        var txt = "ServerS-prueba: " + mensaje;
+
+        socket.join( sala );
+        socket.broadcast.to( sala ).emit( funcion, txt );
+        socket.emit( funcion, txt );
+    } );
+
+    // ---- pruebas funcionando
+    socket.on( "prueb", function ( room, mensaje ) {
+        console.log( "recibiendo... ", mensaje );
+        socket.join( room );
+        socket.broadcast.to( room ).emit( 'prueb', mensaje + "ServerS-pb" );
+        socket.emit( 'prueb', mensaje + "ServerS-pb" );
+    } );
+
+    socket.on( "chat_mediacion", chat_conf );
+    function chat_conf ( room, mensaje, msjTipo, id_sk, u_nombre ) {
+
+        socket.join( room );
+        socket.broadcast.to( room ).emit( 'recibe_chat', mensaje, msjTipo, id_sk, u_nombre );
+        socket.emit( 'recibe_chat', mensaje, msjTipo, id_sk, u_nombre );
     }
 
 
     //--------------------- Chat publico --------------
-    socket.on("verifica_disponibilidad", verificausuario);
-    function verificausuario(sala) {
-        socket.emit('verificacion_chat_rp', usuariosConectados);
+    socket.on( "verifica_disponibilidad", verificausuario );
+    function verificausuario ( sala ) {
+        socket.emit( 'verificacion_chat_rp', usuariosConectados );
     }
-    socket.on("conectar_chat_publico", conectar_chat_public);
-    function conectar_chat_public(room, nickname, misexo) {
+    socket.on( "conectar_chat_publico", conectar_chat_public );
+    function conectar_chat_public ( room, nickname, misexo ) {
 
-        function existeuser() {
-            for (var esc = 0; esc < usuariosConectados.length; esc++) {
-                if ((usuariosConectados[esc][1]) === nickname && (usuariosConectados[esc][0]) === room) {
+        function existeuser () {
+            for ( var esc = 0; esc < usuariosConectados.length; esc++ ) {
+                if ( ( usuariosConectados[ esc ][ 1 ] ) === nickname && ( usuariosConectados[ esc ][ 0 ] ) === room ) {
                     return true;
                 }
             }
             return false;
         }
-        if (usuariosConectados.length > 0) {
-            if (existeuser()) {
+        if ( usuariosConectados.length > 0 ) {
+            if ( existeuser() ) {
                 socketemit();
             } else {
-                usuariosConectados.push([room, nickname, misexo, new Date()]);
+                usuariosConectados.push( [ room, nickname, misexo, new Date() ] );
                 socketemit();
             }
         }
         else {
-            usuariosConectados.push([room, nickname, misexo, new Date()]);
+            usuariosConectados.push( [ room, nickname, misexo, new Date() ] );
             socketemit();
         }
 
-        function socketemit() {
+        function socketemit () {
             var usuariosConectadosEstaSala = [];
             var contenedorInbox40EstaSala = [];
 
             usuariosConectadosEstaSala.length = 0;
             contenedorInbox40EstaSala.length = 0;
 
-            for (var esc = 0; esc < usuariosConectados.length; esc++) {
-                if ((usuariosConectados[esc][0]) === room) {
-                    usuariosConectadosEstaSala.push([usuariosConectados[esc][0], usuariosConectados[esc][1], usuariosConectados[esc][2], usuariosConectados[esc][3]]);
+            for ( var esc = 0; esc < usuariosConectados.length; esc++ ) {
+                if ( ( usuariosConectados[ esc ][ 0 ] ) === room ) {
+                    usuariosConectadosEstaSala.push( [ usuariosConectados[ esc ][ 0 ], usuariosConectados[ esc ][ 1 ], usuariosConectados[ esc ][ 2 ], usuariosConectados[ esc ][ 3 ] ] );
                 }
             }
 
 
-            for (var index = 0; index < contenedorInbox40.length; index++) {
-                if ((contenedorInbox40[index][4]) === room) {
-                    contenedorInbox40EstaSala.push([contenedorInbox40[index][0], contenedorInbox40[index][1], contenedorInbox40[index][2], contenedorInbox40[index][3], contenedorInbox40[index][4]]);
+            for ( var index = 0; index < contenedorInbox40.length; index++ ) {
+                if ( ( contenedorInbox40[ index ][ 4 ] ) === room ) {
+                    contenedorInbox40EstaSala.push( [ contenedorInbox40[ index ][ 0 ], contenedorInbox40[ index ][ 1 ], contenedorInbox40[ index ][ 2 ], contenedorInbox40[ index ][ 3 ], contenedorInbox40[ index ][ 4 ] ] );
                 }
             }
 
-            socket.join(room);
+            socket.join( room );
 
-            socket.broadcast.to(room).emit('actualizaLocal_chat_rp', contenedorInbox40EstaSala);
-            socket.emit('actualizaLocal_chat_rp', contenedorInbox40EstaSala);
+            socket.broadcast.to( room ).emit( 'actualizaLocal_chat_rp', contenedorInbox40EstaSala );
+            socket.emit( 'actualizaLocal_chat_rp', contenedorInbox40EstaSala );
 
 
-            socket.broadcast.to(room).emit('usuarios_chat_rp', usuariosConectadosEstaSala);
-            socket.emit('usuarios_chat_rp', usuariosConectadosEstaSala);
+            socket.broadcast.to( room ).emit( 'usuarios_chat_rp', usuariosConectadosEstaSala );
+            socket.emit( 'usuarios_chat_rp', usuariosConectadosEstaSala );
 
             // socket.broadcast.to(room).emit('actualizaLocal_chat_rp',contenedorInbox40);
             // socket.emit('actualizaLocal_chat_rp',contenedorInbox40);
@@ -516,85 +623,85 @@ function chatPerspnalizado(socket) {
     }
     var dejarEscribir;
 
-    socket.on("escribiendo", function(room, nickname, estatus) {
-        console.log("Escribiendo...");
-        if (dejarEscribir) {
-            clearTimeout(dejarEscribir);
+    socket.on( "escribiendo", function ( room, nickname, estatus ) {
+        console.log( "Escribiendo..." );
+        if ( dejarEscribir ) {
+            clearTimeout( dejarEscribir );
         }
-        dejarEscribir = setTimeout(function() {
-            desjaEscribir(room, nickname);
-        }, 2000);
+        dejarEscribir = setTimeout( function () {
+            desjaEscribir( room, nickname );
+        }, 2000 );
 
-        socket.join(room);
-        socket.broadcast.to(room).emit('usrescribiendo', room, nickname, estatus);
-        socket.emit('usrescribiendo', room, nickname, estatus);
-    });
+        socket.join( room );
+        socket.broadcast.to( room ).emit( 'usrescribiendo', room, nickname, estatus );
+        socket.emit( 'usrescribiendo', room, nickname, estatus );
+    } );
 
-    function desjaEscribir(room, nickname) {
-        socket.join(room);
-        socket.broadcast.to(room).emit('dejaescribir', nickname);
-        socket.emit('dejaescribir', nickname);
+    function desjaEscribir ( room, nickname ) {
+        socket.join( room );
+        socket.broadcast.to( room ).emit( 'dejaescribir', nickname );
+        socket.emit( 'dejaescribir', nickname );
     }
 
-    socket.on("chat_publico", chat_public);
-    function chat_public(room, mensaje, nickname, misexo, horamensaje) {
+    socket.on( "chat_publico", chat_public );
+    function chat_public ( room, mensaje, nickname, misexo, horamensaje ) {
         horaini = new Date();
-        if ((mensaje !== "") && (mensaje !== null) && (mensaje !== 0)) {
-            contenedorInbox40.push([misexo, nickname, mensaje, horamensaje, room]);
-            if (contenedorInbox40.length === 20) {
-                contenedorInbox40.splice(0, 1);
+        if ( ( mensaje !== "" ) && ( mensaje !== null ) && ( mensaje !== 0 ) ) {
+            contenedorInbox40.push( [ misexo, nickname, mensaje, horamensaje, room ] );
+            if ( contenedorInbox40.length === 20 ) {
+                contenedorInbox40.splice( 0, 1 );
             }
-            socket.join(room);
-            socket.broadcast.to(room).emit('chat_rp', misexo, nickname, mensaje, horamensaje);
-            socket.emit('chat_rp', misexo, nickname, mensaje, horamensaje);
+            socket.join( room );
+            socket.broadcast.to( room ).emit( 'chat_rp', misexo, nickname, mensaje, horamensaje );
+            socket.emit( 'chat_rp', misexo, nickname, mensaje, horamensaje );
         }
 
 
     }
     var room;
-    socket.on("chat_Privado", function(room, mensaje, nickname, destinatario, misexo, horamensaje) {
-        socket.join(room);
-        socket.broadcast.to(room).emit('msj_puente_privados', mensaje, nickname, destinatario, misexo, horamensaje);
-        socket.emit('msj_puente_privados', mensaje, nickname, destinatario, misexo, horamensaje);
-    });
+    socket.on( "chat_Privado", function ( room, mensaje, nickname, destinatario, misexo, horamensaje ) {
+        socket.join( room );
+        socket.broadcast.to( room ).emit( 'msj_puente_privados', mensaje, nickname, destinatario, misexo, horamensaje );
+        socket.emit( 'msj_puente_privados', mensaje, nickname, destinatario, misexo, horamensaje );
+    } );
 
-    socket.on("chat_pPrivados", function(sala, remitente, destinatario, mensaje, sexo, horaMensaje) {
-        function existeSala() {
-            for (var a = 0; a < salasPrivadas.length; a++) {
-                if (((remitente + destinatario) === salasPrivadas[a][0]) || ((destinatario + remitente) === salasPrivadas[a][0])) {
+    socket.on( "chat_pPrivados", function ( sala, remitente, destinatario, mensaje, sexo, horaMensaje ) {
+        function existeSala () {
+            for ( var a = 0; a < salasPrivadas.length; a++ ) {
+                if ( ( ( remitente + destinatario ) === salasPrivadas[ a ][ 0 ] ) || ( ( destinatario + remitente ) === salasPrivadas[ a ][ 0 ] ) ) {
                     return true;
                 }
             }
             return false;
         }
-        if (salasPrivadas.length > 0) {
-            if (existeSala()) {
-                for (var a = 0; a < salasPrivadas.length; a++) {
-                    if (((remitente + destinatario) === salasPrivadas[a][0]) || ((destinatario + remitente) === salasPrivadas[a][0])) {
+        if ( salasPrivadas.length > 0 ) {
+            if ( existeSala() ) {
+                for ( var a = 0; a < salasPrivadas.length; a++ ) {
+                    if ( ( ( remitente + destinatario ) === salasPrivadas[ a ][ 0 ] ) || ( ( destinatario + remitente ) === salasPrivadas[ a ][ 0 ] ) ) {
 
-                        room = salasPrivadas[a][0];
+                        room = salasPrivadas[ a ][ 0 ];
                         emitPrivado();
                         return true;
                     }
                 }
 
             } else {
-                salasPrivadas.push([remitente + destinatario, mensaje, sexo, horaMensaje]);
+                salasPrivadas.push( [ remitente + destinatario, mensaje, sexo, horaMensaje ] );
                 room = remitente + destinatario;
                 emitPrivado();
             }
 
         } else {
-            salasPrivadas.push([remitente + destinatario, mensaje, sexo, horaMensaje]);
+            salasPrivadas.push( [ remitente + destinatario, mensaje, sexo, horaMensaje ] );
             room = remitente + destinatario;
             emitPrivado();
         }
-        function emitPrivado() {
-            socket.join(sala);
-            socket.broadcast.to(sala).emit('chat_rpPrivado', remitente, destinatario, mensaje, sexo, horaMensaje);
-            socket.emit('chat_rpPrivado', remitente, destinatario, mensaje, sexo, horaMensaje);
+        function emitPrivado () {
+            socket.join( sala );
+            socket.broadcast.to( sala ).emit( 'chat_rpPrivado', remitente, destinatario, mensaje, sexo, horaMensaje );
+            socket.emit( 'chat_rpPrivado', remitente, destinatario, mensaje, sexo, horaMensaje );
         }
-    });
+    } );
 
     //--------------------- Chat publico --------------
 
@@ -606,16 +713,16 @@ function chatPerspnalizado(socket) {
 // usare objetos y id para los usuarios que se conectan
 // esto para facilitar la identificacion de ellos en el area de chat
 
-horaini=new Date();
-setInterval(verificaTiempo,3605000);
+horaini = new Date();
+setInterval( verificaTiempo, 3605000 );
 var f;
 
-function verificaTiempo(){
-	f=new Date();
-	if((f-horaini)>=3601000){
-		contenedorInbox40.length=0;
-		usuariosConectados.length=0;
-	}
+function verificaTiempo () {
+    f = new Date();
+    if ( ( f - horaini ) >= 3601000 ) {
+        contenedorInbox40.length = 0;
+        usuariosConectados.length = 0;
+    }
 }
 
 //-----fin------- listener chat -------------------------------------------
