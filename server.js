@@ -340,18 +340,37 @@ var salaDefault = "sala0chatprivado";
 function agregaUsuarioCamaleon ( dato ) {
     return new Promise( ( done, fail ) => {
         if ( chatCamOnline.length > 0 ) {
-            chatCamOnline.push( dato );
+            let existe = false;
+            chatCamOnline.forEach( element => {
+                if ( dato.usuario == element.usuario ) {
+                    existe = true;
+                }
+            } );
+            if ( existe == false ) {
+                chatCamOnline.push( dato );
+            }
             done();
         } else {
             chatCamOnline.push( dato );
             done();
         }
     } );
+}
 
-
+function validaconexionActiva () {
+    var f = new Date();
+    var timeNow = f.getTime();
+    chatCamOnline.forEach( ( element, index ) => {
+        var tiempo = ( ( timeNow - element.time ) / 1000 ) / 60;
+        if ( tiempo > 5 ) {
+            chatCamOnline.splice( index, 1 );
+        }
+    } );
 }
 function eliminarUsuario ( idSocket ) {
     return new Promise( ( done, fail ) => {
+
+
         if ( chatCamOnline.length > 0 ) {
             var indexEliminar = null;
             chatCamOnline.forEach( ( element, index ) => {
@@ -381,14 +400,26 @@ function chatPerspnalizado ( socket ) {
     } );
 
     socket.on( "chatOnline", function ( room, usuario ) {
-        var dato = { sala: room, usuario: usuario, idsocket: socket.id };
-        agregaUsuarioCamaleon( dato ).then( () => {
-            var datoString = JSON.stringify( chatCamOnline );
-            socket.join( room );
-            socket.broadcast.to( room ).emit( 'chatOnline', datoString );
-            socket.emit( 'chatOnline', datoString );
-        } );
+        agregausuario( room, usuario );
     } );
+    function agregausuario ( room, usuario ) {
+        validaconexionActiva();
+
+        var f = new Date();
+        var timeNow = f.getTime();
+
+        var dato = { sala: room, usuario: usuario, idsocket: socket.id, time: timeNow };
+        agregaUsuarioCamaleon( dato ).then( () => {
+            emitConectados();
+        } );
+    }
+    function emitConectados () {
+        var datoString = JSON.stringify( chatCamOnline );
+        socket.join( salaDefault );
+        socket.broadcast.to( salaDefault ).emit( 'chatOnline', datoString );
+        socket.emit( 'chatOnline', datoString );
+
+    }
 
 
     socket.on( "escribiendoChatCam", function ( usuario ) {
@@ -401,6 +432,7 @@ function chatPerspnalizado ( socket ) {
         socket.join( salaDefault );
         socket.broadcast.to( salaDefault ).emit( 'mensajeWS', dataIn );
         socket.emit( 'mensajeWS', dataIn );
+        emitConectados();
     } );
 
 
